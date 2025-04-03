@@ -1,0 +1,26 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 927dee4..4c48f7b 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -5,6 +5,7 @@
+ cmake_minimum_required(VERSION 3.14.0 FATAL_ERROR)
+ # needed when UMF is used as an external project
+ set(UMF_CMAKE_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
++set(UMF_BUILD_LIBUMF_POOL_JEMALLOC ON)
+ 
+ list(APPEND CMAKE_MODULE_PATH "${UMF_CMAKE_SOURCE_DIR}/cmake")
+ # Use full path of the helpers module (to omit potential conflicts with others)
+diff --git a/examples/CMakeLists.txt b/examples/CMakeLists.txt
+index 2012316..af5739d 100644
+--- a/examples/CMakeLists.txt
++++ b/examples/CMakeLists.txt
+@@ -212,7 +212,7 @@ if(LINUX)
+     add_umf_executable(
+         NAME ${EXAMPLE_NAME}
+         SRCS memspace_numa/memspace_numa.c
+-        LIBS umf ${LIBHWLOC_LIBRARIES} numa)
++        LIBS umf jemalloc_pool ${LIBHWLOC_LIBRARIES} numa)
+ 
+     target_include_directories(
+         ${EXAMPLE_NAME}
+

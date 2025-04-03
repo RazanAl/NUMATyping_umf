@@ -132,8 +132,8 @@ inline static __attribute__((always_inline))  void umf_free(unsigned NodeId, voi
 inline static __attribute__((always_inline))  void umf_free(unsigned NodeId, void* p){
 	// free(p);
 	//return;
-    if(umfFastJemallocFree(jemalloc_pool[NodeId], p) != UMF_RESULT_SUCCESS){
-	// if(umfPoolFree(jemalloc_pool[NodeId],p) != UMF_RESULT_SUCCESS){
+    // if(umfFastJemallocFree(jemalloc_pool[NodeId], p) != UMF_RESULT_SUCCESS){
+	if(umfPoolFree(jemalloc_pool[NodeId],p) != UMF_RESULT_SUCCESS){
         assert(false && "Could not free pool");
     }
 }
@@ -199,8 +199,8 @@ void* thread_main(void* args){
 			}
 			//printf("old is  %p\n", old);
 			if(old!=0){umf_free(0,old);}
-			buffer[i%BUFFER_SZ] = umfFastJemallocMalloc(jemalloc_pool[0], 64);
-			// buffer[i%BUFFER_SZ] = umf_alloc(0, 64, 64);	
+			// buffer[i%BUFFER_SZ] = umfFastJemallocMalloc(jemalloc_pool[0], 64);
+			buffer[i%BUFFER_SZ] = umf_alloc(0, 64, 64);	
 			//printf("old is going to be %p\n", buffer[i%BUFFER_SZ]);
 			if(i==0){
 				printf("TID: %zu\n",tid);
