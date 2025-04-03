@@ -35,28 +35,13 @@
 #define je_malloc_usable_size malloc_usable_size
 #endif
 
-#define MAX_THREADS 50
-__thread int thread_id=-1;
-__thread int arena_spin;
+__thread unsigned thread_id=UINT_MAX;
+__thread unsigned arena_spin=0;
 atomic_int thread_count=0;
-int tid(){
-	if(thread_id==-1){
-		thread_id = atomic_fetch_add_explicit(&thread_count, 1, memory_order_relaxed);
-		arena_spin = thread_id;
-	}
-	return thread_id;
-}
 
 #define MALLOCX_ARENA_MAX (MALLCTL_ARENAS_ALL - 1)
 
-typedef struct jemalloc_memory_pool_t {
-    umf_memory_provider_handle_t provider;
-    unsigned int arena_index; // base index of jemalloc arena
-	unsigned int num_arenas; // range of associated indices
-	unsigned int tcaches[MAX_THREADS];
-    // set to true if umfMemoryProviderFree() should never be called
-    bool disable_provider_free;
-} jemalloc_memory_pool_t;
+
 
 static __TLS umf_result_t TLS_last_allocation_error;
 
@@ -483,8 +468,8 @@ static umf_result_t op_initialize(umf_memory_provider_handle_t provider,
 		VALGRIND_DO_CREATE_MEMPOOL(pool, 0, 0);
 	}
 	
-	assert(MAX_THREADS<60);
-	for(unsigned i = 0; i< MAX_THREADS;i++){
+	assert(MAX_JEMALLOC_THREADS<250);
+	for(unsigned i = 0; i< MAX_JEMALLOC_THREADS;i++){
 		unsigned tcache;
 		size_t sz = sizeof(unsigned);
 		je_mallctl("tcache.create",&tcache,&sz,NULL,0);
@@ -510,7 +495,7 @@ static void op_finalize(void *pool) {
 		je_mallctl(cmd, NULL, 0, NULL, 0);
 		pool_by_arena_index[je_pool->arena_index] = NULL;		
 	}
-	for(unsigned i = 0; i< MAX_THREADS;i++){
+	for(unsigned i = 0; i< MAX_JEMALLOC_THREADS;i++){
 		unsigned tcache = je_pool->tcaches[i];
 		size_t sz = sizeof(unsigned);
 		je_mallctl("tcache.destroy",NULL,0,&tcache,sz);
