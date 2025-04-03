@@ -315,7 +315,8 @@ static void *op_malloc(void *pool, size_t size) {
 	arena_spin++;
 	if(arena_spin>=je_pool->num_arenas){arena_spin=0;}
 	int arena = je_pool->arena_index + arena_spin;
-    int flags = MALLOCX_ARENA(arena) | MALLOCX_TCACHE(je_pool->tcaches[tid()]);
+    // int flags = MALLOCX_ARENA(arena) | MALLOCX_TCACHE(je_pool->tcaches[tid()]);
+    int flags = MALLOCX_ARENA(arena) | MALLOCX_TCACHE(get_tcache(je_pool,tid()));
     void *ptr = je_mallocx(size, flags);
     if (ptr == NULL) {
         TLS_last_allocation_error = UMF_RESULT_ERROR_OUT_OF_HOST_MEMORY;
@@ -335,7 +336,9 @@ static umf_result_t op_free(void *pool, void *ptr) {
 
     if (ptr != NULL) {
         VALGRIND_DO_MEMPOOL_FREE(pool, ptr);
-        je_dallocx(ptr, MALLOCX_TCACHE(je_pool->tcaches[tid()]));
+        // je_dallocx(ptr, MALLOCX_TCACHE(je_pool->tcaches[tid()]));
+        je_dallocx(ptr, MALLOCX_TCACHE(get_tcache(je_pool,tid())));
+    
     }
 
     return UMF_RESULT_SUCCESS;
@@ -361,7 +364,8 @@ static void *op_realloc(void *pool, void *ptr, size_t size) {
     jemalloc_memory_pool_t *je_pool = (jemalloc_memory_pool_t *)pool;
 
     if (size == 0 && ptr != NULL) {
-        je_dallocx(ptr, MALLOCX_TCACHE(je_pool->tcaches[tid()]));
+    // je_dallocx(ptr, MALLOCX_TCACHE(je_pool->tcaches[tid()]));
+    je_dallocx(ptr, MALLOCX_TCACHE(get_tcache(je_pool,tid())));
         TLS_last_allocation_error = UMF_RESULT_SUCCESS;
         VALGRIND_DO_MEMPOOL_FREE(pool, ptr);
         return NULL;
@@ -373,7 +377,8 @@ static void *op_realloc(void *pool, void *ptr, size_t size) {
 	arena_spin++;
 	if(arena_spin>=je_pool->num_arenas){arena_spin=0;}
 	int arena = je_pool->arena_index + arena_spin;
-    int flags = MALLOCX_ARENA(arena) | MALLOCX_TCACHE(je_pool->tcaches[tid()]);
+     // int flags = MALLOCX_ARENA(arena) | MALLOCX_TCACHE(je_pool->tcaches[tid()]);
+     int flags = MALLOCX_ARENA(arena) | MALLOCX_TCACHE(get_tcache(je_pool,tid()));
     void *new_ptr = je_rallocx(ptr, size, flags);
     if (new_ptr == NULL) {
         TLS_last_allocation_error = UMF_RESULT_ERROR_OUT_OF_HOST_MEMORY;
@@ -397,7 +402,8 @@ static void *op_aligned_alloc(void *pool, size_t size, size_t alignment) {
 	arena_spin++;
 	if(arena_spin>=je_pool->num_arenas){arena_spin=0;}
 	int arena = je_pool->arena_index + arena_spin;
-    int flags = MALLOCX_ALIGN(alignment) | MALLOCX_ARENA(arena) | MALLOCX_TCACHE(je_pool->tcaches[tid()]);
+    // int flags = MALLOCX_ALIGN(alignment) | MALLOCX_ARENA(arena) | MALLOCX_TCACHE(je_pool->tcaches[tid()]);
+    int flags = MALLOCX_ALIGN(alignment) | MALLOCX_ARENA(arena) | MALLOCX_TCACHE(get_tcache(je_pool,tid()));
     // MALLOCX_TCACHE_NONE is set, because jemalloc can mix objects from different arenas inside
     // the tcache, so we wouldn't be able to guarantee isolation of different providers.
     void *ptr = je_mallocx(size, flags);
@@ -431,7 +437,11 @@ static umf_result_t op_initialize(umf_memory_provider_handle_t provider,
 
     pool->provider = provider;
 	pool->num_arenas = 160;
-
+    pool->tcaches_size = 1;
+    printf("Tcaches_size is %zu\n",pool->tcaches_size);
+    pool->tcaches = malloc(pool->tcaches_size * sizeof(unsigned));
+    int lk_init_fail = pthread_rwlock_init(&pool->tcaches_resize_lk, NULL);
+    assert(lk_init_fail==0);
     if (je_params) {
         pool->disable_provider_free = je_params->disable_provider_free;
     } else {
@@ -468,14 +478,19 @@ static umf_result_t op_initialize(umf_memory_provider_handle_t provider,
 		VALGRIND_DO_CREATE_MEMPOOL(pool, 0, 0);
 	}
 	
-	assert(MAX_JEMALLOC_THREADS<250);
-	for(unsigned i = 0; i< MAX_JEMALLOC_THREADS;i++){
-		unsigned tcache;
-		size_t sz = sizeof(unsigned);
-		je_mallctl("tcache.create",&tcache,&sz,NULL,0);
-		pool->tcaches[i] = tcache;
-		// printf("Creating tcache: %d\n",tcache);
-	}
+// assert(MAX_JEMALLOC_THREADS<250);
+assert(pool);
+printf("Initial size:: %zu\n",pool->tcaches_size);
+// changed i < MAX_JEMALLOC_THREADS to i < tcaches_size
+for(unsigned i = 0; i<pool->tcaches_size;i++){
+// for(unsigned i = 0; i<MAX_JEMALLOC_THREADS;i++){
+    unsigned tcache;
+    size_t sz = sizeof(unsigned);
+    je_mallctl("tcache.create",&tcache,&sz,NULL,0);
+    // pool->tcaches[i] = tcache;
+    set_tcache(pool,i,tcache);
+    // printf("Creating tcache: %d\n",tcache);
+}
 	
     return UMF_RESULT_SUCCESS;
 
@@ -495,12 +510,15 @@ static void op_finalize(void *pool) {
 		je_mallctl(cmd, NULL, 0, NULL, 0);
 		pool_by_arena_index[je_pool->arena_index] = NULL;		
 	}
-	for(unsigned i = 0; i< MAX_JEMALLOC_THREADS;i++){
-		unsigned tcache = je_pool->tcaches[i];
-		size_t sz = sizeof(unsigned);
-		je_mallctl("tcache.destroy",NULL,0,&tcache,sz);
-	}
-	
+// replace MAX_JEMALLOC_THREADS with pool->tcaches_size
+	// for(unsigned i = 0; i< MAX_JEMALLOC_THREADS;i++){
+        for(unsigned i = 0; i< je_pool->tcaches_size;i++){
+            // unsigned tcache = je_pool->tcaches[i];
+            unsigned tcache = get_tcache(je_pool,i);
+            size_t sz = sizeof(unsigned);
+            je_mallctl("tcache.destroy",NULL,0,&tcache,sz);
+        }
+        free(je_pool->tcaches);
     umf_ba_global_free(je_pool);
 
     VALGRIND_DO_DESTROY_MEMPOOL(pool);
