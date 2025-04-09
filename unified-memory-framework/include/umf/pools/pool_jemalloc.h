@@ -10,8 +10,11 @@
 #ifndef UMF_JEMALLOC_MEMORY_POOL_H
 #define UMF_JEMALLOC_MEMORY_POOL_H 1
 
+#include "locks/locks.h"  // Add this line
+
 #ifdef __cplusplus
 #include <atomic>
+
 extern "C" {
 // #endif
 
@@ -90,7 +93,8 @@ typedef struct jemalloc_memory_pool_t {
 	unsigned *tcaches;
     // unsigned tcaches[MAX_JEMALLOC_THREADS];
     size_t tcaches_size;
-    pthread_rwlock_t tcaches_resize_lk;
+    MRQDLock tcaches_resize_lk;
+    // pthread_rwlock_t tcaches_resize_lk;
     // set to true if umfMemoryProviderFree() should never be called
     bool disable_provider_free;
 } jemalloc_memory_pool_t;
@@ -100,19 +104,27 @@ inline  __attribute__((always_inline))
 unsigned set_tcache(jemalloc_memory_pool_t* je_pool, unsigned tid, unsigned tcache){
     assert(je_pool);
     access_tcaches:
-    pthread_rwlock_rdlock(&je_pool->tcaches_resize_lk);
+    // pthread_rwlock_rdlock(&je_pool->tcaches_resize_lk);
+    mrqd_rlock(&je_pool->tcaches_resize_lk);
     if(tid < je_pool->tcaches_size){
         // int size = je_pool->tcaches_size;
         je_pool->tcaches[tid] = tcache;
-        pthread_rwlock_unlock(&je_pool->tcaches_resize_lk);
+        // pthread_rwlock_unlock(&je_pool->tcaches_resize_lk);
+        mrqd_runlock(&je_pool->tcaches_resize_lk);
     } else {
-        pthread_rwlock_unlock(&je_pool->tcaches_resize_lk);
-        pthread_rwlock_wrlock(&je_pool->tcaches_resize_lk);
+        // pthread_rwlock_unlock(&je_pool->tcaches_resize_lk);
+        // pthread_rwlock_wrlock(&je_pool->tcaches_resize_lk);
+
+        mrqd_runlock(&je_pool->tcaches_resize_lk);
+        mrqd_lock(&je_pool->tcaches_resize_lk);
+
         if (tid>= je_pool->tcaches_size){
             //resizing tcaches
             unsigned *temp_tcaches = (unsigned *)realloc(je_pool->tcaches, (tid+1) * sizeof(unsigned));
             if (!temp_tcaches) {
-                pthread_rwlock_unlock(&je_pool->tcaches_resize_lk);
+                // pthread_rwlock_unlock(&je_pool->tcaches_resize_lk);
+                mrqd_unlock(&je_pool->tcaches_resize_lk);
+
                 exit(EXIT_FAILURE);
             }
             je_pool->tcaches = temp_tcaches;
@@ -126,7 +138,9 @@ unsigned set_tcache(jemalloc_memory_pool_t* je_pool, unsigned tid, unsigned tcac
             }
 
         }
-        pthread_rwlock_unlock(&je_pool->tcaches_resize_lk);
+        // pthread_rwlock_unlock(&je_pool->tcaches_resize_lk);
+        mrqd_unlock(&je_pool->tcaches_resize_lk);
+
         goto access_tcaches;
     }
 }
@@ -135,19 +149,26 @@ inline  __attribute__((always_inline))
 unsigned get_tcache(jemalloc_memory_pool_t* je_pool, unsigned tid ){
     assert(je_pool);
     access_tcaches:
-    pthread_rwlock_rdlock(&je_pool->tcaches_resize_lk);
+    // pthread_rwlock_rdlock(&je_pool->tcaches_resize_lk);
+    mrqd_rlock(&je_pool->tcaches_resize_lk);
+
     if(tid < je_pool->tcaches_size){
         unsigned tcache_tid = je_pool->tcaches[tid];
-        pthread_rwlock_unlock(&je_pool->tcaches_resize_lk);
+        // pthread_rwlock_unlock(&je_pool->tcaches_resize_lk);
+        mrqd_runlock(&je_pool->tcaches_resize_lk);
+
         return tcache_tid;
     } else {
-        pthread_rwlock_unlock(&je_pool->tcaches_resize_lk);
-        pthread_rwlock_wrlock(&je_pool->tcaches_resize_lk);
+        // pthread_rwlock_unlock(&je_pool->tcaches_resize_lk);
+        // pthread_rwlock_wrlock(&je_pool->tcaches_resize_lk);
+        mrqd_runlock(&je_pool->tcaches_resize_lk);
+        mrqd_lock(&je_pool->tcaches_resize_lk);
         if (tid>= je_pool->tcaches_size){
             //resising tcaches
             unsigned *temp_tcaches = (unsigned *)realloc(je_pool->tcaches, (tid+1) * sizeof(unsigned));
             if (!temp_tcaches) {
-                pthread_rwlock_unlock(&je_pool->tcaches_resize_lk);
+                // pthread_rwlock_unlock(&je_pool->tcaches_resize_lk);
+                mrqd_unlock(&je_pool->tcaches_resize_lk);
                 exit(EXIT_FAILURE);
             }
             je_pool->tcaches = temp_tcaches;
@@ -163,7 +184,9 @@ unsigned get_tcache(jemalloc_memory_pool_t* je_pool, unsigned tid ){
             }
             
         }
-        pthread_rwlock_unlock(&je_pool->tcaches_resize_lk);
+        // pthread_rwlock_unlock(&je_pool->tcaches_resize_lk);
+        mrqd_unlock(&je_pool->tcaches_resize_lk);
+        
         goto access_tcaches;
     }
 }

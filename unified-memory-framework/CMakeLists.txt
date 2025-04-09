@@ -311,6 +311,24 @@ target_include_directories(
     umf_headers INTERFACE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
                           $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
+
+#********************************* adding qd-locks lib 
+# Path to QD Lock relative to project root
+set(QD_LOCK_ROOT ${CMAKE_SOURCE_DIR}/../qd_lock_lib_modified)
+
+# Add the QD Lock headers
+include_directories(${QD_LOCK_ROOT}/src/c)
+
+# Add the library directory (static or shared)
+link_directories(${QD_LOCK_ROOT}/bin)
+
+# Define the library name (without 'lib' prefix or '.a/.so')
+set(QD_LOCK_LIB qd_lock_lib CACHE INTERNAL "qd_lock_lib")
+
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_C_EXTENSIONS ON) 
+#**************************************************************#
 if(WINDOWS)
     add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
     # set PATH to DLLs on Windows

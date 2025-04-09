@@ -114,29 +114,29 @@ void umf_alloc_init() {
 }
 
 
-inline static __attribute__((always_inline))  void* umf_alloc(unsigned NodeId, size_t size, size_t allign);
+// inline static __attribute__((always_inline))  void* umf_alloc(unsigned NodeId, size_t size, size_t allign);
 
-inline static __attribute__((always_inline))  void* umf_alloc(unsigned NodeId, size_t size, size_t allign){
-	//return mallocx(size,0);
-    // void *ptr = malloc(size);
+// inline static __attribute__((always_inline))  void* umf_alloc(unsigned NodeId, size_t size, size_t allign){
+// 	//return mallocx(size,0);
+//     // void *ptr = malloc(size);
 
-	//std::cout<<"here";
-	assert(true==true);
-    // void *ptr = umfFastJemallocMalloc(jemalloc_pool[NodeId], size);
-	void *ptr = umfPoolMalloc(jemalloc_pool[NodeId], size);
-	(ptr && "Bad alloc");
-    return ptr;
-}
+// 	//std::cout<<"here";
+// 	assert(true==true);
+//     // void *ptr = umfFastJemallocMalloc(jemalloc_pool[NodeId], size);
+// 	void *ptr = umfPoolMalloc(jemalloc_pool[NodeId], size);
+// 	(ptr && "Bad alloc");
+//     return ptr;
+// }
 
-inline static __attribute__((always_inline))  void umf_free(unsigned NodeId, void* p);
-inline static __attribute__((always_inline))  void umf_free(unsigned NodeId, void* p){
-	// free(p);
-	//return;
-    if(umfFastJemallocFree(jemalloc_pool[NodeId], p) != UMF_RESULT_SUCCESS){
-	// if(umfPoolFree(jemalloc_pool[NodeId],p) != UMF_RESULT_SUCCESS){
-        assert(false && "Could not free pool");
-    }
-}
+// inline static __attribute__((always_inline))  void umf_free(unsigned NodeId, void* p);
+// // inline static __attribute__((always_inline))  void umf_free(unsigned NodeId, void* p){
+// 	// free(p);
+// 	//return;
+//     if(umfFastJemallocFree(jemalloc_pool[NodeId], p) != UMF_RESULT_SUCCESS){
+// 	// if(umfPoolFree(jemalloc_pool[NodeId],p) != UMF_RESULT_SUCCESS){
+//         assert(false && "Could not free pool");
+//     }
+// }
 
 
 
@@ -198,8 +198,10 @@ void* thread_main(void* args){
 				old = buffer[i%BUFFER_SZ];
 			}
 			//printf("old is  %p\n", old);
-			if(old!=0){umf_free(0,old);}
-			buffer[i%BUFFER_SZ] = umfFastJemallocMalloc(jemalloc_pool[0], 64);
+			// if(old!=0){umf_free(0,old);}
+			if(old!=0){numa_free(old, 64);}
+			// buffer[i%BUFFER_SZ] = umfFastJemallocMalloc(jemalloc_pool[0], 64);
+			buffer[i%BUFFER_SZ] = numa_alloc_onnode(64, 0);
 			// buffer[i%BUFFER_SZ] = umf_alloc(0, 64, 64);	
 			//printf("old is going to be %p\n", buffer[i%BUFFER_SZ]);
 			if(i==0){

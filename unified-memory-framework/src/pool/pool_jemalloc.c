@@ -37,7 +37,8 @@
 
 __thread unsigned thread_id=UINT_MAX;
 __thread unsigned arena_spin=0;
-atomic_int thread_count=0;
+// atomic_int thread_count=0;
+atomic_int thread_count = ATOMIC_VAR_INIT(0);
 
 #define MALLOCX_ARENA_MAX (MALLCTL_ARENAS_ALL - 1)
 
@@ -440,8 +441,9 @@ static umf_result_t op_initialize(umf_memory_provider_handle_t provider,
     pool->tcaches_size = 1;
     printf("Tcaches_size is %zu\n",pool->tcaches_size);
     pool->tcaches = malloc(pool->tcaches_size * sizeof(unsigned));
-    int lk_init_fail = pthread_rwlock_init(&pool->tcaches_resize_lk, NULL);
-    assert(lk_init_fail==0);
+    // int lk_init_fail = pthread_rwlock_init(&pool->tcaches_resize_lk, NULL);
+    mrqd_initialize(&pool->tcaches_resize_lk);
+    // assert(lk_init_fail==0);
     if (je_params) {
         pool->disable_provider_free = je_params->disable_provider_free;
     } else {
