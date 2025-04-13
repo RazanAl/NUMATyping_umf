@@ -122,8 +122,8 @@ inline static __attribute__((always_inline))  void* umf_alloc(unsigned NodeId, s
 
 	//std::cout<<"here";
 	assert(true==true);
-    // void *ptr = umfFastJemallocMalloc(jemalloc_pool[NodeId], size);
-	void *ptr = umfPoolMalloc(jemalloc_pool[NodeId], size);
+    void *ptr = umfFastJemallocMalloc(jemalloc_pool[NodeId], size);
+	// void *ptr = umfPoolMalloc(jemalloc_pool[NodeId], size);
 	(ptr && "Bad alloc");
     return ptr;
 }
