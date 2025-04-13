@@ -9,7 +9,7 @@
 
 #include <assert.h>
 #include <stdlib.h>
-
+#include <stdio.h>
 #include <umf/memspace.h>
 
 #include "base_alloc_global.h"
@@ -102,11 +102,12 @@ umfMemoryProviderCreateFromMemspace(umf_const_memspace_handle_t memspace,
 
     // TODO: for now, we only support memspaces that consist of memtargets
     // of the same type. Fix this.
+
     assert(verifyMemTargetsTypes(memspace) == UMF_RESULT_SUCCESS);
     ret = memspace->nodes[0]->ops->memory_provider_create_from_memspace(
         memspace, privs, memspace->size, policy, provider);
-
     umf_ba_global_free(privs);
+
 
     return ret;
 }
