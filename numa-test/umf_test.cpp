@@ -11,7 +11,7 @@
 #ifndef _WIN32
 #include <unistd.h>
 #endif
-
+// #include <iostream>
 #include <umf/ipc.h>
 #include <umf/memory_pool.h>
 #include <umf/pools/pool_proxy.h>
@@ -68,7 +68,7 @@ error_memspace:
     return ret;
 }
 
-#define NUM_NODES 2
+#define NUM_NODES 1
 static umf_memory_provider_handle_t NUMA_HANDLES[NUM_NODES];
 umf_memory_pool_handle_t jemalloc_pool[NUM_NODES];
     
@@ -99,7 +99,7 @@ void umf_alloc_init() {
         umfMemspaceDestroy(hMemspace);
         size_t sz;
     
-        ptr = umfPoolAlignedMalloc(jemalloc_pool[i], 100*1024*1024, sizeof(char));
+        ptr = umfPoolAlignedMalloc(jemalloc_pool[i], 1*1024*1024*1024, sizeof(char));
         printf("Allocated pool %d \n", i);
         if(ptr == NULL){
             assert(false && "Could not allocate pool");
@@ -114,15 +114,26 @@ void umf_alloc_init() {
 }
 
 
-void* umf_alloc(unsigned NodeId, size_t size, size_t allign){
-    void *ptr = NULL;
-    ptr = umfPoolAlignedMalloc(jemalloc_pool[NodeId], size, allign);
-	assert(ptr && "Bad alloc");
+inline static __attribute__((always_inline))  void* umf_alloc(unsigned NodeId, size_t size, size_t allign);
+
+inline static __attribute__((always_inline))  void* umf_alloc(unsigned NodeId, size_t size, size_t allign){
+	//return mallocx(size,0);
+    // void *ptr = malloc(size);
+
+	//std::cout<<"here";
+	assert(true==true);
+    void *ptr = umfFastJemallocMalloc(jemalloc_pool[NodeId], size);
+	// ptr = umfPoolMalloc(jemalloc_pool[NodeId], size);
+	(ptr && "Bad alloc");
     return ptr;
 }
 
-void umf_free(unsigned NodeId, void* p){
-    if(umfPoolFree(jemalloc_pool[NodeId], p) != UMF_RESULT_SUCCESS){
+inline static __attribute__((always_inline))  void umf_free(unsigned NodeId, void* p);
+inline static __attribute__((always_inline))  void umf_free(unsigned NodeId, void* p){
+	// free(p);
+	//return;
+    if(umfFastJemallocFree(jemalloc_pool[NodeId], p) != UMF_RESULT_SUCCESS){
+	// if(umfPoolFree(jemalloc_pool[NodeId],p) != UMF_RESULT_SUCCESS){
         assert(false && "Could not free pool");
     }
 }
@@ -136,19 +147,19 @@ size_t* args;
 size_t NUM_THREADS;
 pthread_barrier_t bar;
 pthread_mutex_t lk;
-int alloc_on_node = 0;
+int allocator = 0;
 
 struct timespec start, end;
 int* buffer;
-int BUFFER_SZ = 1024*1024*1024;
+int BUFFER_SZ = 40*1024*1024;
 
 void global_init(){
 	threads = malloc(NUM_THREADS*sizeof(pthread_t));
 	args = malloc(NUM_THREADS*sizeof(size_t));
 	pthread_barrier_init(&bar, NULL, NUM_THREADS);
     pthread_mutex_init(&lk,NULL);		
-	//buffer = numa_alloc_onnode(sizeof(int)*BUFFER_SZ, alloc_on_node);
-	buffer = umf_alloc(alloc_on_node, sizeof(int)*BUFFER_SZ, 64);
+	buffer = malloc(sizeof(int)*BUFFER_SZ);
+	//buffer = umf_alloc(alloc_on_node, sizeof(int)*BUFFER_SZ, 64);
 	assert(RAND_MAX > BUFFER_SZ);
 }
 
@@ -159,19 +170,14 @@ void global_cleanup(){
     pthread_mutex_destroy(&lk);
 }
 
-void local_init(){
-	// do something
-	for(int i = 0; i<BUFFER_SZ; i+=1024){
-		buffer[i]=i;
-	}
-}
+void local_init(){}
 void local_cleanup(){}
 
 void* thread_main(void* args){
 	size_t tid = *((size_t*)args);
 	local_init();
-	printf("Hello, World! from %d\n",tid); /*printf() is specified as thread-safe as of C11*/
-	numa_run_on_node(1);
+	printf("Hello, World from %zu\n",tid); /*printf() is specified as thread-safe as of C11*/
+	numa_run_on_node(0);
 	pthread_barrier_wait(&bar);
 	if(tid==0){
 		clock_gettime(CLOCK_MONOTONIC,&start);
@@ -179,16 +185,32 @@ void* thread_main(void* args){
 	pthread_barrier_wait(&bar);
 	
 	// do something
-	int old = 1;
-	int idx = 0;
-	for(int i = 0; i<50000000; i++){
-		//idx += 500000;
-		//if(idx>=BUFFER_SZ){idx = idx%BUFFER_SZ + 1;}
-		idx = rand()%BUFFER_SZ;
-		assert(idx<BUFFER_SZ);
-		// if(old>100000){old = 1;}
-		// old += buffer[idx];
-		buffer[idx]++;
+	printf("Allocation: %d\n",allocator);
+	int BUFFER_SZ = 1024*1024;
+	void** buffer = calloc(BUFFER_SZ,sizeof(void*));
+	void * old;
+	for(int i = 0; i<1000000; i++){
+		if(allocator == 1){
+			if(i >= 1){
+				old = buffer[(i%BUFFER_SZ)];
+			}
+			else{
+				old = buffer[i%BUFFER_SZ];
+			}
+			//printf("old is  %p\n", old);
+			if(old!=0){umf_free(0,old);}
+			// buffer[i%BUFFER_SZ] = umfFastJemallocMalloc(jemalloc_pool[0], 64);
+			buffer[i%BUFFER_SZ] = umf_alloc(0, 64, 64);	
+			//printf("old is going to be %p\n", buffer[i%BUFFER_SZ]);
+			if(i==0){
+				printf("TID: %zu\n",tid);
+			}
+		}
+		else{
+			void* old = buffer[i%BUFFER_SZ];
+			if(old!=0){free(old);}
+			buffer[i%BUFFER_SZ] = malloc(64);	
+		}
 	}
 	
     
@@ -207,16 +229,17 @@ void* thread_main(void* args){
 int main(int argc, const char* argv[]){
 	
 	// parse args
-	if(argc==2){
-		alloc_on_node = atoi( argv[1] );
-	}
+	// if(argc==2){
+	// 	allocator = atoi( argv[1] );
+	// }
+	// parse args
 	NUM_THREADS = 1;
-	
-	
-
-	
+	if(argc==3){
+		allocator = atoi( argv[1] );
+		NUM_THREADS = atoi( argv[2] );
+	}
 	global_init();
-	
+	printf("Num Threads = %zu\n",NUM_THREADS);
 	// launch threads
 	int ret; size_t i;
 	for(i=1; i<NUM_THREADS; i++){

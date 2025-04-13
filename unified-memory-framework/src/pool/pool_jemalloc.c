@@ -438,8 +438,8 @@ static umf_result_t op_initialize(umf_memory_provider_handle_t provider,
 
     pool->provider = provider;
 	pool->num_arenas = 160;
-    pool->tcaches_size = 1;
-    printf("Tcaches_size is %zu\n",pool->tcaches_size);
+    pool->tcaches_size = 10;
+    printf("Initial Tcaches_size is %zu\n",pool->tcaches_size);
     pool->tcaches = malloc(pool->tcaches_size * sizeof(unsigned));
     // int lk_init_fail = pthread_rwlock_init(&pool->tcaches_resize_lk, NULL);
     mrqd_initialize(&pool->tcaches_resize_lk);
