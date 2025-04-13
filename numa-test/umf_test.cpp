@@ -122,8 +122,8 @@ inline static __attribute__((always_inline))  void* umf_alloc(unsigned NodeId, s
 
 	//std::cout<<"here";
 	assert(true==true);
-    void *ptr = umfFastJemallocMalloc(jemalloc_pool[NodeId], size);
-	// ptr = umfPoolMalloc(jemalloc_pool[NodeId], size);
+    // void *ptr = umfFastJemallocMalloc(jemalloc_pool[NodeId], size);
+	void *ptr = umfPoolMalloc(jemalloc_pool[NodeId], size);
 	(ptr && "Bad alloc");
     return ptr;
 }
@@ -199,8 +199,8 @@ void* thread_main(void* args){
 			}
 			//printf("old is  %p\n", old);
 			if(old!=0){umf_free(0,old);}
-			// buffer[i%BUFFER_SZ] = umfFastJemallocMalloc(jemalloc_pool[0], 64);
-			buffer[i%BUFFER_SZ] = umf_alloc(0, 64, 64);	
+			buffer[i%BUFFER_SZ] = umfFastJemallocMalloc(jemalloc_pool[0], 64);
+			// buffer[i%BUFFER_SZ] = umf_alloc(0, 64, 64);	
 			//printf("old is going to be %p\n", buffer[i%BUFFER_SZ]);
 			if(i==0){
 				printf("TID: %zu\n",tid);
@@ -271,4 +271,6 @@ int main(int argc, const char* argv[]){
 	printf("Elapsed (ns): %llu\n",elapsed_ns);
 	double elapsed_s = ((double)elapsed_ns)/1000000000.0;
 	printf("Elapsed (s): %lf\n",elapsed_s);
+	printf("%lf\n",elapsed_s);
+	
 }
