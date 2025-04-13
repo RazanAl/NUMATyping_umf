@@ -10,12 +10,13 @@
 #ifndef UMF_JEMALLOC_MEMORY_POOL_H
 #define UMF_JEMALLOC_MEMORY_POOL_H 1
 
-#include "locks/locks.h"  // Add this line
+
 
 #ifdef __cplusplus
 #include <atomic>
 
 extern "C" {
+    #include "locks/locks.h"  // Add this line
 // #endif
 
 // #include <stdbool.h>
@@ -24,6 +25,7 @@ extern "C" {
 using namespace std;
 #else
 #include <stdatomic.h>
+#include "locks/locks.h"  // Add this line
 #endif
 
 #include <limits.h>

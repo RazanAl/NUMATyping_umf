@@ -60,7 +60,7 @@
 
 # list of directories which contain headers (include directories)
 # TODO: bug with ./
-IDIRS:=. ../unified-memory-framework/include ../unified-memory-framework/src/utils ../unified-memory-framework/examples/common ../unified-memory-framework/src/ravl ../unified-memory-framework/src/critnib ../unified-memory-framework/src/provider ../unified-memory-framework/src/memspaces ../unified-memory-framework/src/memtargets
+IDIRS:=. ../unified-memory-framework/include ../unified-memory-framework/src/utils ../unified-memory-framework/examples/common ../unified-memory-framework/src/ravl ../unified-memory-framework/src/critnib ../unified-memory-framework/src/provider ../unified-memory-framework/src/memspaces ../unified-memory-framework/src/memtargets ../qd_lock_lib_modified/src/c
 	# /usr/include
 # directory to put build artifacts (e.g. .o, .d files)
 ODIR:=./obj
@@ -68,7 +68,7 @@ ODIR:=./obj
 LDIRS:=../unified-memory-framework/build/lib
 # libraries to link against (are expected to be in the above directories,
 # or they are system default)
-LIBS := -pthread -l:libumf.a -l:libjemalloc_pool.a -lhwloc -lnuma -lrt -ldl -ljemalloc  
+LIBS := -pthread -l:libumf.a -l:libjemalloc_pool.a -lhwloc -lnuma -lrt -ldl -ljemalloc  -l:libqd_lock_lib.a
 # directories that should be built first using recursive make.
 # You should avoid this in general, but it's useful for building
 # external libraries which we depend on
@@ -139,7 +139,7 @@ CXXFLAGS:= -pthread -g -O3 $(WARNING_FLAGS)
 
 # linker flags 
 LDFLAGS := $(WARNING_FLAGS)
-
+LDFLAGS += -L../qd_lock_lib_modified/bin
 # -------------------------
 # Build configurations
 # -------------------------

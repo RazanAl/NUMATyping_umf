@@ -324,6 +324,11 @@ link_directories(${QD_LOCK_ROOT}/bin)
 
 # Define the library name (without 'lib' prefix or '.a/.so')
 set(QD_LOCK_LIB qd_lock_lib CACHE INTERNAL "qd_lock_lib")
+add_library(qd_lock_lib SHARED IMPORTED GLOBAL)
+set_target_properties(qd_lock_lib PROPERTIES
+    IMPORTED_LOCATION "${QD_LOCK_ROOT}/bin/libqd_lock_lib.a"
+    INTERFACE_INCLUDE_DIRECTORIES "${QD_LOCK_ROOT}/src/c"
+)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)

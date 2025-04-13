@@ -7,6 +7,21 @@ obj/release/umf_test.d: umf_test.cpp \
  ../unified-memory-framework/include/umf/memory_provider_ops.h \
  ../unified-memory-framework/include/umf/memtarget.h \
  ../unified-memory-framework/include/umf/pools/pool_jemalloc.h \
+ ../qd_lock_lib_modified/src/c/locks/locks.h \
+ ../qd_lock_lib_modified/src/c/locks/mcs_lock.h \
+ ../qd_lock_lib_modified/src/c/locks/oo_lock_interface.h \
+ ../qd_lock_lib_modified/src/c/misc/padded_types.h \
+ ../qd_lock_lib_modified/src/c/misc/bsd_stdatomic.h \
+ ../qd_lock_lib_modified/src/c/misc/thread_includes.h \
+ ../qd_lock_lib_modified/src/c/locks/drmcs_lock.h \
+ ../qd_lock_lib_modified/src/c/read_indicators/reader_groups_read_indicator.h \
+ ../qd_lock_lib_modified/src/c/locks/tatas_lock.h \
+ ../qd_lock_lib_modified/src/c/locks/qd_lock.h \
+ ../qd_lock_lib_modified/src/c/qd_queues/qd_queue.h \
+ ../qd_lock_lib_modified/src/c/locks/mrqd_lock.h \
+ ../qd_lock_lib_modified/src/c/locks/ccsynch_lock.h \
+ ../qd_lock_lib_modified/src/c/misc/misc_utils.h \
+ ../qd_lock_lib_modified/src/c/misc/error_help.h \
  ../unified-memory-framework/include/umf/memory_pool_ops.h \
  ../unified-memory-framework/include/umf/ipc.h \
  ../unified-memory-framework/include/umf/pools/pool_proxy.h \
