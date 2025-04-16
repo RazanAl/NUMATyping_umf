@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 */
 
+
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,7 +23,7 @@
 
 #include <jemalloc/jemalloc.h>
 
-#include <threads.h>
+// #include <threads.h>
 #include <stdatomic.h>
 
 // The Windows version of jemalloc uses API with je_ prefix,
@@ -38,6 +39,11 @@
 __thread unsigned thread_id=UINT_MAX;
 __thread unsigned arena_spin=0;
 atomic_int thread_count=0;
+
+atomic_int je_pool_counter = 0;
+
+thread_local size_t tcaches_size = 0;
+thread_local unsigned* tcaches = NULL; 
 
 #define MALLOCX_ARENA_MAX (MALLCTL_ARENAS_ALL - 1)
 
@@ -438,6 +444,8 @@ static umf_result_t op_initialize(umf_memory_provider_handle_t provider,
     pool->provider = provider;
 	pool->num_arenas = 160;
     pool->tcaches_size = 1;
+    pool->id = atomic_fetch_add(&je_pool_counter, 1);
+    printf("created pool #%i \n", je_pool_counter);
     printf("Tcaches_size is %zu\n",pool->tcaches_size);
     pool->tcaches = malloc(pool->tcaches_size * sizeof(unsigned));
     int lk_init_fail = pthread_rwlock_init(&pool->tcaches_resize_lk, NULL);
@@ -482,15 +490,15 @@ static umf_result_t op_initialize(umf_memory_provider_handle_t provider,
 assert(pool);
 printf("Initial size:: %zu\n",pool->tcaches_size);
 // changed i < MAX_JEMALLOC_THREADS to i < tcaches_size
-for(unsigned i = 0; i<pool->tcaches_size;i++){
-// for(unsigned i = 0; i<MAX_JEMALLOC_THREADS;i++){
-    unsigned tcache;
-    size_t sz = sizeof(unsigned);
-    je_mallctl("tcache.create",&tcache,&sz,NULL,0);
-    // pool->tcaches[i] = tcache;
-    set_tcache(pool,i,tcache);
-    // printf("Creating tcache: %d\n",tcache);
-}
+// for(unsigned i = 0; i<pool->tcaches_size;i++){
+// // for(unsigned i = 0; i<MAX_JEMALLOC_THREADS;i++){
+//     unsigned tcache;
+//     size_t sz = sizeof(unsigned);
+//     je_mallctl("tcache.create",&tcache,&sz,NULL,0);
+//     // pool->tcaches[i] = tcache;
+//     set_tcache(pool,i,tcache);
+//     // printf("Creating tcache: %d\n",tcache);
+// }
 	
     return UMF_RESULT_SUCCESS;
 
