@@ -1,0 +1,119 @@
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 345  of event 'cycles:P'
+# Event count (approx.): 361105197
+#
+# Overhead  Command   Shared Object         Symbol                                
+# ........  ........  ....................  ......................................
+#
+    17.83%  umf_test  umf_test              [.] mrqd_rlock
+     6.55%  umf_test  libjemalloc.so.2      [.] mallocx
+     5.43%  umf_test  umf_test              [.] umf_alloc_init()
+     3.79%  umf_test  umf_test              [.] thread_main(void*)
+     3.76%  umf_test  umf_test              [.] mrqd_runlock
+     3.01%  umf_test  [kernel.kallsyms]     [k] clear_page_erms
+     2.45%  umf_test  [kernel.kallsyms]     [k] native_irq_return_iret
+     2.40%  umf_test  libc.so.6             [.] pthread_mutex_trylock@@GLIBC_2.34
+     2.13%  umf_test  [kernel.kallsyms]     [k] up_read
+     2.06%  umf_test  libc.so.6             [.] __memset_avx2_unaligned_erms
+     1.93%  umf_test  [kernel.kallsyms]     [k] rmqueue_bulk
+     1.85%  umf_test  [kernel.kallsyms]     [k] do_anonymous_page
+     1.73%  umf_test  [kernel.kallsyms]     [k] lru_gen_del_folio.constprop.0
+     1.52%  umf_test  [kernel.kallsyms]     [k] widen_string
+     1.48%  umf_test  ld-linux-x86-64.so.2  [.] __tunable_get_val
+     1.47%  umf_test  [kernel.kallsyms]     [k] exc_page_fault
+     1.38%  umf_test  [kernel.kallsyms]     [k] lru_gen_add_folio
+     1.38%  umf_test  [kernel.kallsyms]     [k] _compound_head
+     1.22%  umf_test  [kernel.kallsyms]     [k] mem_cgroup_commit_charge
+     1.21%  umf_test  libc.so.6             [.] __vfscanf_internal
+     1.14%  umf_test  [kernel.kallsyms]     [k] __rcu_read_lock
+     1.04%  umf_test  [kernel.kallsyms]     [k] get_page_from_freelist
+     1.04%  umf_test  [kernel.kallsyms]     [k] sync_regs
+     1.04%  umf_test  [kernel.kallsyms]     [k] try_charge_memcg
+     1.04%  umf_test  [kernel.kallsyms]     [k] rmqueue
+     1.00%  umf_test  [kernel.kallsyms]     [k] clear_bhb_loop
+     0.93%  umf_test  libjemalloc.so.2      [.] 0x0000000000025f00
+     0.92%  umf_test  [kernel.kallsyms]     [k] __kmalloc_node
+     0.91%  umf_test  [kernel.kallsyms]     [k] folio_add_lru
+     0.80%  umf_test  libhwloc.so.15.5.2    [.] 0x00000000000354bf
+     0.76%  umf_test  [kernel.kallsyms]     [k] kfree
+     0.73%  umf_test  [kernel.kallsyms]     [k] mas_walk
+     0.71%  umf_test  [kernel.kallsyms]     [k] blk_cgroup_congested
+     0.71%  umf_test  [kernel.kallsyms]     [k] folio_add_new_anon_rmap
+     0.71%  umf_test  [kernel.kallsyms]     [k] do_user_addr_fault
+     0.69%  umf_test  [kernel.kallsyms]     [k] wp_page_copy
+     0.69%  umf_test  [kernel.kallsyms]     [k] __handle_mm_fault
+     0.69%  umf_test  [kernel.kallsyms]     [k] percpu_counter_add_batch
+     0.67%  umf_test  libjemalloc.so.2      [.] 0x0000000000028ae9
+     0.58%  umf_test  [kernel.kallsyms]     [k] __virt_addr_valid
+     0.38%  umf_test  [kernel.kallsyms]     [k] __lruvec_stat_mod_folio
+     0.35%  umf_test  [kernel.kallsyms]     [k] pte_mkwrite
+     0.35%  umf_test  [kernel.kallsyms]     [k] __hrtimer_run_queues
+     0.35%  umf_test  [kernel.kallsyms]     [k] __folio_throttle_swaprate
+     0.35%  umf_test  [kernel.kallsyms]     [k] __rcu_read_unlock
+     0.35%  umf_test  [kernel.kallsyms]     [k] folio_batch_move_lru
+     0.35%  umf_test  libjemalloc.so.2      [.] 0x000000000009f06b
+     0.35%  umf_test  libjemalloc.so.2      [.] 0x000000000009f5f0
+     0.35%  umf_test  libjemalloc.so.2      [.] 0x000000000009c198
+     0.35%  umf_test  libjemalloc.so.2      [.] 0x0000000000061c2e
+     0.35%  umf_test  libjemalloc.so.2      [.] 0x00000000000289b1
+     0.35%  umf_test  libjemalloc.so.2      [.] 0x000000000005f96c
+     0.35%  umf_test  [kernel.kallsyms]     [k] down_read_trylock
+     0.35%  umf_test  [kernel.kallsyms]     [k] pud_val
+     0.35%  umf_test  libjemalloc.so.2      [.] 0x0000000000028a9c
+     0.35%  umf_test  [kernel.kallsyms]     [k] get_mem_cgroup_from_mm
+     0.35%  umf_test  [kernel.kallsyms]     [k] _raw_spin_lock
+     0.35%  umf_test  libc.so.6             [.] __vfprintf_internal
+     0.35%  umf_test  libjemalloc.so.2      [.] 0x0000000000060f34
+     0.35%  umf_test  [kernel.kallsyms]     [k] __rmqueue_pcplist
+     0.35%  umf_test  libjemalloc.so.2      [.] 0x000000000009d7c3
+     0.35%  umf_test  libjemalloc.so.2      [.] 0x0000000000028aba
+     0.35%  umf_test  [kernel.kallsyms]     [k] __pte_offset_map
+     0.35%  umf_test  libjemalloc.so.2      [.] 0x000000000009bfe3
+     0.35%  umf_test  [kernel.kallsyms]     [k] lru_add_fn
+     0.35%  umf_test  ld-linux-x86-64.so.2  [.] _dl_fini
+     0.35%  umf_test  libjemalloc.so.2      [.] 0x00000000000a25c7
+     0.35%  umf_test  libjemalloc.so.2      [.] 0x0000000000026e20
+     0.35%  umf_test  libjemalloc.so.2      [.] 0x0000000000061223
+     0.35%  umf_test  [kernel.kallsyms]     [k] zap_pte_range
+     0.35%  umf_test  libjemalloc.so.2      [.] 0x000000000009cf58
+     0.35%  umf_test  libjemalloc.so.2      [.] 0x000000000002c57e
+     0.35%  umf_test  libjemalloc.so.2      [.] 0x000000000006006b
+     0.35%  umf_test  libjemalloc.so.2      [.] 0x0000000000028ab0
+     0.35%  umf_test  [kernel.kallsyms]     [k] free_unref_page_commit
+     0.35%  umf_test  [kernel.kallsyms]     [k] free_unref_page_prepare
+     0.35%  umf_test  [kernel.kallsyms]     [k] uncharge_folio
+     0.35%  umf_test  [kernel.kallsyms]     [k] mas_store_b_node
+     0.35%  umf_test  [kernel.kallsyms]     [k] vm_normal_page
+     0.35%  umf_test  [kernel.kallsyms]     [k] folio_remove_rmap_ptes
+     0.35%  umf_test  [kernel.kallsyms]     [k] free_unref_page_list
+     0.35%  umf_test  libjemalloc.so.2      [.] 0x0000000000028acd
+     0.35%  umf_test  [kernel.kallsyms]     [k] __count_memcg_events
+     0.35%  umf_test  libjemalloc.so.2      [.] 0x0000000000060c64
+     0.35%  umf_test  libjemalloc.so.2      [.] 0x000000000009c3b0
+     0.33%  umf_test  libjemalloc.so.2      [.] 0x00000000000270ce
+     0.33%  umf_test  umf_test              [.] mallocx@plt
+     0.32%  umf_test  libjemalloc.so.2      [.] 0x0000000000060c6a
+     0.31%  umf_test  [kernel.kallsyms]     [k] cap_task_setscheduler
+     0.31%  umf_test  [kernel.kallsyms]     [k] update_curr
+     0.30%  umf_test  [kernel.kallsyms]     [k] __raw_spin_lock_irqsave
+     0.30%  umf_test  [kernel.kallsyms]     [k] check_heap_object
+     0.27%  umf_test  [kernel.kallsyms]     [k] do_syscall_64
+     0.25%  umf_test  [kernel.kallsyms]     [k] check_stack_object
+     0.16%  umf_test  [kernel.kallsyms]     [k] change_pte_range
+     0.04%  umf_test  [kernel.kallsyms]     [k] __perf_event_task_sched_in
+     0.04%  umf_test  [kernel.kallsyms]     [k] perf_ctx_enable
+     0.02%  umf_test  [kernel.kallsyms]     [k] nmi_restore
+     0.01%  umf_test  [kernel.kallsyms]     [k] _raw_spin_unlock
+     0.01%  umf_test  [kernel.kallsyms]     [k] __intel_pmu_enable_all.constprop.0
+     0.00%  perf-exe  [kernel.kallsyms]     [k] nmi_restore
+     0.00%  umf_test  [kernel.kallsyms]     [k] native_write_msr
+     0.00%  perf-exe  [kernel.kallsyms]     [k] native_write_msr
+
+
+#
+# (Cannot load tips.txt file, please install perf!)
+#

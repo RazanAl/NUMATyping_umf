@@ -69,8 +69,9 @@ error_memspace:
 }
 
 #define NUM_NODES 1
-static umf_memory_provider_handle_t NUMA_HANDLES[NUM_NODES];
-umf_memory_pool_handle_t jemalloc_pool[NUM_NODES];
+#define num_je_pools_per_node  1
+static umf_memory_provider_handle_t NUMA_HANDLES[num_je_pools_per_node * NUM_NODES];
+umf_memory_pool_handle_t jemalloc_pool[num_je_pools_per_node * NUM_NODES];
     
 
 __attribute__((constructor))
@@ -79,37 +80,40 @@ void umf_alloc_init() {
     umf_memspace_handle_t hMemspace= NULL;
     umf_mempolicy_handle_t hPolicy = NULL;
     for (unsigned i = 0; i < NUM_NODES; ++i) {
-        umf_result_t r = umfMemspaceCreateFromNumaArray(&i, 1, &hMemspace);
-        if (r != UMF_RESULT_SUCCESS) {
-            assert(false && "Could not create space");
-        }
-        umf_result_t policy = umfMempolicyCreate(UMF_MEMPOLICY_BIND, &hPolicy);
-        if (policy != UMF_RESULT_SUCCESS) {
-            assert(false && "Could not create policy");
-        }
-        umf_result_t h = umfMemoryProviderCreateFromMemspace(hMemspace, hPolicy, &NUMA_HANDLES[i]);
-        if (h != UMF_RESULT_SUCCESS) {
-            assert(false && "Could not create policy");
-        }
-        umf_result_t pool = umfPoolCreate(umfJemallocPoolOps(), NUMA_HANDLES[i], NULL,  UMF_POOL_CREATE_FLAG_DISABLE_TRACKING, &jemalloc_pool[i]);
-        if(pool != UMF_RESULT_SUCCESS){
-            assert(false && "Could not create pool");
-        }
-        umfMempolicyDestroy(hPolicy);
-        umfMemspaceDestroy(hMemspace);
-        size_t sz;
-    
-        ptr = umfPoolAlignedMalloc(jemalloc_pool[i], 1*1024*1024*1024, sizeof(char));
-        printf("Allocated pool %d \n", i);
-        if(ptr == NULL){
-            assert(false && "Could not allocate pool");
-        }
-        for(int j = 0; j < 100*1024*1024; j+=4096){
-            ((char*)ptr)[j] = 'a';
-        }
-        if(umfPoolFree(jemalloc_pool[i], NULL) != UMF_RESULT_SUCCESS){
-            assert(false && "Could not free pool");
-        }
+		for (unsigned k = 0; k < num_je_pools_per_node; ++k) {
+			int pool_index = i*(num_je_pools_per_node)+k;
+			umf_result_t r = umfMemspaceCreateFromNumaArray(&i, 1, &hMemspace);
+			if (r != UMF_RESULT_SUCCESS) {
+				assert(false && "Could not create space");
+			}
+			umf_result_t policy = umfMempolicyCreate(UMF_MEMPOLICY_BIND, &hPolicy);
+			if (policy != UMF_RESULT_SUCCESS) {
+				assert(false && "Could not create policy");
+			}
+			umf_result_t h = umfMemoryProviderCreateFromMemspace(hMemspace, hPolicy, &NUMA_HANDLES[pool_index]);
+			if (h != UMF_RESULT_SUCCESS) {
+				assert(false && "Could not create policy");
+			}
+			umf_result_t pool = umfPoolCreate(umfJemallocPoolOps(), NUMA_HANDLES[pool_index], NULL,  UMF_POOL_CREATE_FLAG_DISABLE_TRACKING, &jemalloc_pool[pool_index]);
+			if(pool != UMF_RESULT_SUCCESS){
+				assert(false && "Could not create pool");
+			}
+			umfMempolicyDestroy(hPolicy);
+			umfMemspaceDestroy(hMemspace);
+			size_t sz;
+		
+			ptr = umfPoolAlignedMalloc(jemalloc_pool[pool_index], 1*1024*1024*1024, sizeof(char));
+			printf("Allocated pool %d \n", pool_index);
+			if(ptr == NULL){
+				assert(false && "Could not allocate pool");
+			}
+			for(int j = 0; j < 100*1024*1024; j+=4096){
+				((char*)ptr)[j] = 'a';
+			}
+			if(umfPoolFree(jemalloc_pool[pool_index], NULL) != UMF_RESULT_SUCCESS){
+				assert(false && "Could not free pool");
+			}
+		}
     }
 }
 
