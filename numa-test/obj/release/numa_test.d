@@ -6,6 +6,7 @@ obj/release/numa_test.d: numa_test.cpp \
  ../unified-memory-framework/include/umf/memory_provider.h \
  ../unified-memory-framework/include/umf/memory_provider_ops.h \
  ../unified-memory-framework/include/umf/memtarget.h \
+ ../jemalloc/include/jemalloc/jemalloc.h \
  ../unified-memory-framework/include/umf/pools/pool_jemalloc.h \
  ../unified-memory-framework/include/umf/memory_pool_ops.h \
  ../unified-memory-framework/include/umf/ipc.h \

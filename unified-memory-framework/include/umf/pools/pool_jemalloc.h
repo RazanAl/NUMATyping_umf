@@ -140,81 +140,6 @@ unsigned get_tcache(jemalloc_memory_pool_t* je_pool, unsigned tid ){
     }
 
 
-
-
-// inline  __attribute__((always_inline))
-// unsigned set_tcache(jemalloc_memory_pool_t* je_pool, unsigned tid, unsigned tcache){
-//     assert(je_pool);
-//     access_tcaches:
-//     pthread_rwlock_rdlock(&je_pool->tcaches_resize_lk);
-//     if(tid < je_pool->tcaches_size){
-//         // int size = je_pool->tcaches_size;
-//         je_pool->tcaches[tid] = tcache;
-//         pthread_rwlock_unlock(&je_pool->tcaches_resize_lk);
-//     } else {
-//         pthread_rwlock_unlock(&je_pool->tcaches_resize_lk);
-//         pthread_rwlock_wrlock(&je_pool->tcaches_resize_lk);
-//         if (tid>= je_pool->tcaches_size){
-//             //resizing tcaches
-//             unsigned *temp_tcaches = (unsigned *)realloc(je_pool->tcaches, (tid+1) * sizeof(unsigned));
-//             if (!temp_tcaches) {
-//                 pthread_rwlock_unlock(&je_pool->tcaches_resize_lk);
-//                 exit(EXIT_FAILURE);
-//             }
-//             je_pool->tcaches = temp_tcaches;
-//             unsigned old_size = je_pool->tcaches_size;
-//             je_pool->tcaches_size = tid+1;
-//             for (unsigned i = old_size; i<je_pool->tcaches_size-1 ; i++){
-//                 unsigned tcache_set;
-//                 size_t sz = sizeof(unsigned);
-//                 je_mallctl("tcache.create",&tcache_set,&sz,NULL,0);
-//                 je_pool->tcaches[i] = tcache_set;
-//             }
-
-//         }
-//         pthread_rwlock_unlock(&je_pool->tcaches_resize_lk);
-//         goto access_tcaches;
-//     }
-// }
-
-// inline  __attribute__((always_inline))
-// unsigned get_tcache(jemalloc_memory_pool_t* je_pool, unsigned tid ){
-//     assert(je_pool);
-//     access_tcaches:
-//     pthread_rwlock_rdlock(&je_pool->tcaches_resize_lk);
-//     if(tid < je_pool->tcaches_size){
-//         unsigned tcache_tid = je_pool->tcaches[tid];
-//         pthread_rwlock_unlock(&je_pool->tcaches_resize_lk);
-//         return tcache_tid;
-//     } else {
-//         pthread_rwlock_unlock(&je_pool->tcaches_resize_lk);
-//         pthread_rwlock_wrlock(&je_pool->tcaches_resize_lk);
-//         if (tid>= je_pool->tcaches_size){
-//             //resising tcaches
-//             unsigned *temp_tcaches = (unsigned *)realloc(je_pool->tcaches, (tid+1) * sizeof(unsigned));
-//             if (!temp_tcaches) {
-//                 pthread_rwlock_unlock(&je_pool->tcaches_resize_lk);
-//                 exit(EXIT_FAILURE);
-//             }
-//             je_pool->tcaches = temp_tcaches;
-//             unsigned old_size = je_pool->tcaches_size;
-//             je_pool->tcaches_size = tid+1;
-//             // pthread_rwlock_unlock(&je_pool->tcaches_resize_lk);
-            
-//             for (unsigned i = old_size; i<je_pool->tcaches_size ; i++){
-//                 unsigned tcache;
-//                 size_t sz = sizeof(unsigned);
-//                 je_mallctl("tcache.create",&tcache,&sz,NULL,0);
-//                 je_pool->tcaches[i] = tcache;
-//             }
-            
-//         }
-//         pthread_rwlock_unlock(&je_pool->tcaches_resize_lk);
-//         goto access_tcaches;
-//     }
-// }
-
-
 inline void* __attribute__((always_inline))
 umfFastJemallocMalloc(umf_memory_pool_handle_t hPool, size_t size){
 	assert(hPool!=NULL);
@@ -232,6 +157,7 @@ umfFastJemallocMalloc(umf_memory_pool_handle_t hPool, size_t size){
     // uint64_t flags = MALLOCX_ARENA(arena) | MALLOCX_TCACHE(je_pool->tcaches[tid()]);
     uint64_t flags = MALLOCX_ARENA(arena) | MALLOCX_TCACHE(get_tcache(je_pool,tid()));
     void *ptr = mallocx(size, flags);
+    void *ptr2 = mallocv(size, flags);
     if (ptr == NULL) {
         //TLS_last_allocation_error = UMF_RESULT_ERROR_OUT_OF_HOST_MEMORY;
         return NULL;
