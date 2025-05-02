@@ -315,8 +315,8 @@ target_include_directories(
 #********************************* linking to  cloned jemalloc lib 
  # Path to jemalloc  relative to project root
 #  set(JEMALLOCV_ROOT ${CMAKE_SOURCE_DIR}/../jemallov)
-set(JEMALLOC_INCLUDE_DIRS "/home/razan/thesis/NUMATyping_umf/jemallocv/include")
-set(JEMALLOCV_LIB "/home/razan/thesis/NUMATyping_umf/jemallocv/lib/libjemalloc.so")
+set(JEMALLOC_INCLUDE_DIRS "/home/razan/thesis/NUMATyping_umf/jemalloc/include")
+set(JEMALLOCV_LIB "/home/razan/thesis/NUMATyping_umf/jemalloc/lib/libjemalloc.so")
 
  
  # Add jemallocv headers

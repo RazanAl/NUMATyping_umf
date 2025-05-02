@@ -29,7 +29,7 @@ using namespace std;
 #include <umf/memory_pool.h>
 #include <umf/memory_pool_ops.h>
 // #include <jemalloc/jemalloc.h>
-#include "jemallocv/include/jemalloc/jemalloc.h"
+#include "jemalloc/include/jemalloc/jemalloc.h"
 //#include <../src/memory_pool_internal.h>
 
 
