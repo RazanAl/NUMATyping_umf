@@ -311,6 +311,30 @@ target_include_directories(
     umf_headers INTERFACE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
                           $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
+
+#********************************* linking to  cloned jemalloc lib 
+ # Path to jemalloc  relative to project root
+#  set(JEMALLOCV_ROOT ${CMAKE_SOURCE_DIR}/../jemallov)
+set(JEMALLOC_INCLUDE_DIRS "/home/razan/thesis/NUMATyping_umf/jemallocv/include")
+set(JEMALLOCV_LIB "/home/razan/thesis/NUMATyping_umf/jemallocv/lib/libjemalloc.so")
+
+ 
+ # Add jemallocv headers
+ include_directories(${JEMALLOCV_ROOT}/include)
+ include_directories("/home/razan/thesis/NUMATyping_umf/")
+
+ # Add the library directory (static or shared)
+ link_directories(${JEMALLOCV_LIB})
+ 
+ # Define the library name (without 'lib' prefix or '.a/.so')
+ set(JEMALLOCV_LIB jemalloc CACHE INTERNAL "jemalloc")
+ 
+ set(CMAKE_C_STANDARD 11)
+ set(CMAKE_C_STANDARD_REQUIRED ON)
+ set(CMAKE_C_EXTENSIONS ON) 
+ #**************************************************************#
+
+
 if(WINDOWS)
     add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
     # set PATH to DLLs on Windows

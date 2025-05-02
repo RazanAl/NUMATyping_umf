@@ -21,7 +21,7 @@
 #include <umf/memory_pool_ops.h>
 #include <umf/pools/pool_jemalloc.h>
 
-#include <jemalloc/jemalloc.h>
+// #include <jemalloc/jemalloc.h>
 
 // #include <threads.h>
 #include <stdatomic.h>
@@ -30,6 +30,7 @@
 // while the Linux one does not.
 #ifndef _WIN32
 #define je_mallocx mallocx
+#define je_mallocv mallocv
 #define je_dallocx dallocx
 #define je_rallocx rallocx
 #define je_mallctl mallctl
@@ -448,7 +449,7 @@ static umf_result_t op_initialize(umf_memory_provider_handle_t provider,
     printf("created pool #%i \n", je_pool_counter);
     printf("Tcaches_size is %zu\n",pool->tcaches_size);
     pool->tcaches = malloc(pool->tcaches_size * sizeof(unsigned));
-    int lk_init_fail = pthread_rwlock_init(&pool->tcaches_resize_lk, NULL);
+    // int lk_init_fail = pthread_rwlock_init(&pool->tcaches_resize_lk, NULL);
     assert(lk_init_fail==0);
     if (je_params) {
         pool->disable_provider_free = je_params->disable_provider_free;

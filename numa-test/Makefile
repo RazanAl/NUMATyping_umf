@@ -60,15 +60,17 @@
 
 # list of directories which contain headers (include directories)
 # TODO: bug with ./
-IDIRS:=. ../unified-memory-framework/include ../unified-memory-framework/src/utils ../unified-memory-framework/examples/common ../unified-memory-framework/src/ravl ../unified-memory-framework/src/critnib ../unified-memory-framework/src/provider ../unified-memory-framework/src/memspaces ../unified-memory-framework/src/memtargets
+IDIRS:=. ../unified-memory-framework/include ../unified-memory-framework/src/utils ../unified-memory-framework/examples/common ../unified-memory-framework/src/ravl ../unified-memory-framework/src/critnib ../unified-memory-framework/src/provider ../unified-memory-framework/src/memspaces ../unified-memory-framework/src/memtargets ../jemallocv/src ../
 	# /usr/include
 # directory to put build artifacts (e.g. .o, .d files)
 ODIR:=./obj
 # list of directories which contain linked in libraries
-LDIRS:=../unified-memory-framework/build/lib
+LDIRS:=../unified-memory-framework/build/lib 
+LDIRS+= /home/razan/thesis/NUMATyping_umf/jemallocv/lib
 # libraries to link against (are expected to be in the above directories,
 # or they are system default)
-LIBS := -pthread -l:libumf.a -l:libjemalloc_pool.a -lhwloc -lnuma -lrt -ldl -ljemalloc  
+# LIBS := -pthread -l:libumf.a -l:libjemalloc_pool.a -lhwloc -lnuma -lrt -ldl -ljemalloc  -l:libjemalloc.so
+LIBS := -pthread -L../jemallocv/lib -l:libjemalloc.so -l:libumf.a -l:libjemalloc_pool.a -lhwloc -lnuma -lrt -ldl  
 # directories that should be built first using recursive make.
 # You should avoid this in general, but it's useful for building
 # external libraries which we depend on
@@ -134,11 +136,22 @@ WARNING_FLAGS:= -ftrapv -Wreturn-type -W -Wall \
 # -L /usr/lib/x86_64-linux-gnu/
 
 # Default build flags.
+JEMALLOCV_INC_DIR := /home/razan/thesis/NUMATyping_umf/jemallocv/include
 CFLAGS:=-pthread -g -O3 $(WARNING_FLAGS)
+CFLAGS += -I$(JEMALLOCV_INC_DIR)
+
 CXXFLAGS:= -pthread -g -O3 $(WARNING_FLAGS)
+CXXFLAGS += -I$(JEMALLOCV_INC_DIR)
+# CXXFLAGS += -DJEMALLOC_MANGLE
+
 
 # linker flags 
+# JEMALLOCV_LIB_DIR := /home/razan/thesis/NUMATyping_umf/jemallocv/lib
+
 LDFLAGS := $(WARNING_FLAGS)
+
+# LDFLAGS += -L$(JEMALLOCV_LIB_DIR)
+# LDFLAGS += -l:libjemalloc.so
 
 # -------------------------
 # Build configurations
@@ -153,7 +166,8 @@ LDFLAGS := $(WARNING_FLAGS)
 # make release
 BUILDS :=release profile debug popcount clang-debug clang-release cross-compile
 DEFAULT_BUILD=release
-
+# LDFLAGS += -L$(JEMALLOCV_LIB_DIR)
+# LDFLAGS += -l:libjemalloc.so
 # -------------------------------
 # Build and build var definitions
 # -------------------------------

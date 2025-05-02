@@ -109,7 +109,10 @@
         "*.def": "cpp",
         "syncstream": "cpp",
         "utils_examples.h": "c",
-        "mempolicy.h": "c"
+        "mempolicy.h": "c",
+        "util.h": "c",
+        "jemalloc.h": "c",
+        "*.in": "c"
     },
     "cmake.sourceDirectory": "/home/kidus/NUMATyping/unified-memory-framework/examples/basic"
 }

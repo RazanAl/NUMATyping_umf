@@ -2,6 +2,7 @@
 #include <umf/mempolicy.h>
 #include <umf/memspace.h>
 #include <jemalloc/jemalloc.h>
+#include "jemallocv/include/jemalloc/jemalloc.h"
 #include <umf/pools/pool_jemalloc.h>
 
 #include <assert.h>

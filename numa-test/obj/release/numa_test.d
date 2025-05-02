@@ -8,6 +8,7 @@ obj/release/numa_test.d: numa_test.cpp \
  ../unified-memory-framework/include/umf/memtarget.h \
  ../unified-memory-framework/include/umf/pools/pool_jemalloc.h \
  ../unified-memory-framework/include/umf/memory_pool_ops.h \
+ ../jemallocv/include/jemalloc/jemalloc.h \
  ../unified-memory-framework/include/umf/ipc.h \
  ../unified-memory-framework/include/umf/pools/pool_proxy.h \
  ../unified-memory-framework/include/umf/pools/pool_scalable.h \

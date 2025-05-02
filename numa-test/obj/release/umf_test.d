@@ -6,6 +6,7 @@ obj/release/umf_test.d: umf_test.cpp \
  ../unified-memory-framework/include/umf/memory_provider.h \
  ../unified-memory-framework/include/umf/memory_provider_ops.h \
  ../unified-memory-framework/include/umf/memtarget.h \
+ ../jemallocv/include/jemalloc/jemalloc.h \
  ../unified-memory-framework/include/umf/pools/pool_jemalloc.h \
  ../unified-memory-framework/include/umf/memory_pool_ops.h \
  ../unified-memory-framework/include/umf/ipc.h \
