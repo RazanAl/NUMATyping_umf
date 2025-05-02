@@ -3446,11 +3446,16 @@ void JEMALLOC_NOTHROW *
 JEMALLOC_ATTR(malloc) JEMALLOC_ALLOC_SIZE(1)
 je_mallocv(size_t size, int flags) {
 	static int first_time = 1;
-
     if (first_time) {
-        printf( "\033[1;31m Using Cloned Jemallocv V Veeee!\033[0m\n");
+        printf( "\033[1;31m Using Jemallocv Veeee!\033[0m\n");
         first_time = 0;
     }
+	LOG("core.mallocx.entry", "size: %zu, flags: %d", size, flags);
+
+	void * ret = imallocv_fastpath(size, flags, &je_mallocx);
+
+	LOG("core.mallocx.exit", "result: %p", ret);
+	return ret;
 }
 
 static void *
