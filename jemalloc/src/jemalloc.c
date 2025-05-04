@@ -3441,6 +3441,92 @@ je_mallocx(size_t size, int flags) {
 	return ret;
 }
 
+JEMALLOC_ALWAYS_INLINE void *
+imallocv_fastpath(size_t size, int flags, void *(fallback_alloc)(size_t,int)){
+
+	// To be removed 
+	static int first_time = 1;
+	if (first_time == 1) {
+        printf( "\033[1;31m Using implemented imallocv_fastpath \033[0m\n");
+        first_time = 2;
+    }
+	
+	// jemallocx needed defines:
+	LOG("core.mallocx.entry", "size: %zu, flags: %d", size, flags);
+	void *ret;
+
+// initializing options from je_mallocx
+	static_opts_t sopts;
+	dynamic_opts_t dopts;
+	static_opts_init(&sopts);
+	dynamic_opts_init(&dopts);
+	sopts.assert_nonempty_alloc = true;
+	sopts.null_out_result_on_error = true;
+	sopts.oom_string = "<jemalloc>: Error in mallocx(): out of memory\n";
+	dopts.result = &ret;
+	dopts.num_items = 1;
+	dopts.item_size = size;
+	sopts.slow = false;
+	if (likely(flags != 0)) {
+		dopts.alignment = MALLOCX_ALIGN_GET(flags);
+		dopts.zero = MALLOCX_ZERO_GET(flags);
+		dopts.tcache_ind = mallocx_tcache_get(flags);
+		dopts.arena_ind = mallocx_arena_get(flags);
+	}
+	if (dopts.alignment == 0 && dopts.zero==0) {
+		// imalloc(&sopts, &dopts);
+	// imalloc 
+		/* We always need the tsd.  Let's grab it right away. */
+		tsd_t *tsd = tsd_fetch();
+		assert(tsd);	
+		// imalloc_body(sopts, dopts, tsd);
+	//imalloc_body
+		/* Where the actual allocated memory will live. */
+		void *ret = NULL;
+		szind_t ind = 0; // the bin indix within a tcache
+		size_t usize; // the actual allocated size, as fastpath depends on the size being a bin.
+		sz_size2index_usize_fastpath(size, &ind, &usize); // specify bin size and index from target size 
+		dopts.usize = usize;
+		// size = usize;
+		check_entry_exit_locking(tsd_tsdn(tsd));
+		// allocation = imalloc_no_sample(sopts, dopts, tsd, size, usize, ind, sz_can_use_slab(usize));
+	//imalloc_no_sample 
+		/* Get the tcache. */
+		tcache_t *tcache = tcache_get_from_ind(tsd, dopts.tcache_ind,
+			sopts.slow, /* is_alloc */ true);
+
+		/* Get the arena. */
+		arena_t *arena;
+		if (arena_get_from_ind(tsd, dopts.arena_ind, &arena)) {
+			return NULL;
+		}
+		// iallocztm(tsd_tsdn(tsd), size, ind, dopts->zero, tcache, false,
+		//     arena, sopts->slow);
+	//iallocztm
+		// bool slab = sz_can_use_slab(usize);
+		// allocation = iallocztm_explicit_slab(tsd_tsdn(tsd), size, ind, dopts->zero, slab, tcache, false, arena, sopts->slow);
+		tsdn_t *tsdn =tsd_tsdn(tsd);
+		// bool slow_path = sopts.slow;
+		// ret = arena_malloc(tsdn, arena, size, ind, dopts.zero, slab, tcache, slow_path );
+		ret = arena_malloc(tsdn, arena, size, ind, dopts.zero, tcache, sopts.slow);
+		bool is_internal = false;
+		if (config_stats && is_internal && likely(ret != NULL)) {
+			arena_internal_add(iaalloc(tsdn, ret), isalloc(tsdn, ret));
+		}
+		if (first_time == 2) {
+			printf( "\033[1;31m Using arena_malloc!  \033[0m\n");
+			first_time = 3;
+		}
+		return ret;
+	}else{
+		printf( "\033[1;31m Alignment and zero flags are not zero, they are %i and %i \033[0m\n",dopts.alignment, dopts.zero );
+		return fallback_alloc(size,flags);
+	}
+
+	
+}
+
+
 JEMALLOC_EXPORT JEMALLOC_ALLOCATOR JEMALLOC_RESTRICT_RETURN
 void JEMALLOC_NOTHROW *
 JEMALLOC_ATTR(malloc) JEMALLOC_ALLOC_SIZE(1)

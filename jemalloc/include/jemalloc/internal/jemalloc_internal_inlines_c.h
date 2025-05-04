@@ -337,12 +337,4 @@ imalloc_fastpath(size_t size, void *(fallback_alloc)(size_t)) {
 	return fallback_alloc(size);
 }
 
-JEMALLOC_ALWAYS_INLINE void *
-imallocv_fastpath(size_t size, int flags, void *(fallback_alloc)(size_t,int)){
-	LOG("core.mallocx.entry", "size: %zu, flags: %d", size, flags);
-	if (1) {
-		return fallback_alloc(size,flags);
-	}
-}
-
 #endif /* JEMALLOC_INTERNAL_INLINES_C_H */
