@@ -3441,13 +3441,14 @@ je_mallocx(size_t size, int flags) {
 	return ret;
 }
 
+// static int TcacheVsArena = 0;
 JEMALLOC_ALWAYS_INLINE void *
 imallocv_fastpath(size_t size, int flags, void *(fallback_alloc)(size_t,int)){
 
 	// To be removed 
 	static int first_time = 1;
 	if (first_time == 1) {
-        printf( "\033[1;31m Using implemented imallocv_fastpath \033[0m\n");
+        printf( "\033[1;31m Using imallocv_fastpath \033[0m\n");
         first_time = 2;
     }
 	
@@ -3473,51 +3474,125 @@ imallocv_fastpath(size_t size, int flags, void *(fallback_alloc)(size_t,int)){
 		dopts.tcache_ind = mallocx_tcache_get(flags);
 		dopts.arena_ind = mallocx_arena_get(flags);
 	}
-	if (dopts.alignment == 0 && dopts.zero==0) {
-		// imalloc(&sopts, &dopts);
-	// imalloc 
-		/* We always need the tsd.  Let's grab it right away. */
-		tsd_t *tsd = tsd_fetch();
-		assert(tsd);	
-		// imalloc_body(sopts, dopts, tsd);
-	//imalloc_body
-		/* Where the actual allocated memory will live. */
-		void *ret = NULL;
-		szind_t ind = 0; // the bin indix within a tcache
-		size_t usize; // the actual allocated size, as fastpath depends on the size being a bin.
-		sz_size2index_usize_fastpath(size, &ind, &usize); // specify bin size and index from target size 
-		dopts.usize = usize;
-		// size = usize;
-		check_entry_exit_locking(tsd_tsdn(tsd));
-		// allocation = imalloc_no_sample(sopts, dopts, tsd, size, usize, ind, sz_can_use_slab(usize));
-	//imalloc_no_sample 
-		/* Get the tcache. */
-		tcache_t *tcache = tcache_get_from_ind(tsd, dopts.tcache_ind,
-			sopts.slow, /* is_alloc */ true);
+	if (likely(dopts.alignment == 0 && dopts.zero==0)) {
 
-		/* Get the arena. */
-		arena_t *arena;
+		/* imalloc_fastpath-like implementation */
+		tsd_t *tsd = tsd_get(false);
+		szind_t ind;
+		size_t usize;
+		sz_size2index_usize_fastpath(size, &ind, &usize);
+		assert(ind < SC_NBINS);
+		assert((SC_LOOKUP_MAXCLASS < SC_SMALL_MAXCLASS) &&
+	    (size <= SC_SMALL_MAXCLASS));
+
+		uint64_t allocated, threshold;
+		te_malloc_fastpath_ctx(tsd, &allocated, &threshold);
+		uint64_t allocated_after = allocated + usize;
+		
+		if (!malloc_initialized()) {
+			assert(threshold == 0);
+		} else {
+			assert(ind == sz_size2index(size));
+			assert(usize > 0 && usize == sz_index2size(ind));
+		}
+
+		// if (unlikely(allocated_after >= threshold)) {
+		// 	// printf("\033[1;31m Located after : %i > threshold: %i %i  . Falling back\033[0m\n",allocated_after, threshold );
+		// 	return fallback_alloc(size,flags);
+		// }else{
+		// 	printf("\033[1;31m Located after : %i < threshold: %i %i  . Falling back\033[0m\n",allocated_after, threshold );
+		// }
+		assert(tsd_fast(tsd));
+
+		tcache_t *tcache = tcache_get_from_ind(tsd, dopts.tcache_ind, sopts.slow, /* is_alloc */ true);
+		assert(tcache == tcache_get(tsd));
+		cache_bin_t *bin = &tcache->bins[ind];
+		bool tcache_success;
+		void *ret;
+
+		
+		//try allocating from tcache 
+		ret = cache_bin_alloc_easy(bin, &tcache_success);
+		if (tcache_success) {
+			fastpath_success_finish(tsd, allocated_after, bin, ret);
+			// printf("\033[1;31m Tcache Fast success \033[0m\n");
+		    // TcacheVsArena++;
+
+			return ret;
+		}
+		// printf("\033[1;31m Tcache norm success \033[0m\n");
+		ret = cache_bin_alloc(bin, &tcache_success);
+		if (tcache_success) {
+			fastpath_success_finish(tsd, allocated_after, bin, ret);
+			// TcacheVsArena++;
+			// printf("\033[1;31m Tcache norm success \033[0m\n");
+			// print("success! ");
+			// printf("\033[1;31m Tcache success \033[0m\n");
+			return ret;
+		}
+		// fallback to using arenas
+			/* Get the arena. */
+		arena_t *arena; //= arena_get(tsd_tsdn(tsd), dopts.arena_ind, true);
 		if (arena_get_from_ind(tsd, dopts.arena_ind, &arena)) {
 			return NULL;
 		}
-		// iallocztm(tsd_tsdn(tsd), size, ind, dopts->zero, tcache, false,
-		//     arena, sopts->slow);
-	//iallocztm
-		// bool slab = sz_can_use_slab(usize);
-		// allocation = iallocztm_explicit_slab(tsd_tsdn(tsd), size, ind, dopts->zero, slab, tcache, false, arena, sopts->slow);
+	// 	// iallocztm(tsd_tsdn(tsd), size, ind, dopts->zero, tcache, false,
+	// 	//     arena, sopts->slow);
+	// //iallocztm
 		tsdn_t *tsdn =tsd_tsdn(tsd);
-		// bool slow_path = sopts.slow;
-		// ret = arena_malloc(tsdn, arena, size, ind, dopts.zero, slab, tcache, slow_path );
+	// 	// TcacheVsArena--;
 		ret = arena_malloc(tsdn, arena, size, ind, dopts.zero, tcache, sopts.slow);
 		bool is_internal = false;
 		if (config_stats && is_internal && likely(ret != NULL)) {
 			arena_internal_add(iaalloc(tsdn, ret), isalloc(tsdn, ret));
 		}
-		if (first_time == 2) {
-			printf( "\033[1;31m Using arena_malloc!  \033[0m\n");
-			first_time = 3;
-		}
 		return ret;
+
+
+	// /* je_mallocx-like implementation */
+	// 	// imalloc(&sopts, &dopts);
+	// // imalloc 
+	// 	/* We always need the tsd.  Let's grab it right away. */
+		// tsd_t *tsd = tsd_fetch();
+	// 	assert(tsd);	
+	// 	// imalloc_body(sopts, dopts, tsd);
+	// //imalloc_body
+	// 	/* Where the actual allocated memory will live. */
+	// 	void *ret = NULL;
+	// 	szind_t ind = 0; // the bin indix within a tcache
+	// 	size_t usize; // the actual allocated size, as fastpath depends on the size being a bin.
+	// 	sz_size2index_usize_fastpath(size, &ind, &usize); // specify bin size and index from target size 
+	// 	dopts.usize = usize;
+	// 	// size = usize;
+	// 	check_entry_exit_locking(tsd_tsdn(tsd));
+	// 	// allocation = imalloc_no_sample(sopts, dopts, tsd, size, usize, ind, sz_can_use_slab(usize));
+	// //imalloc_no_sample 
+	// 	/* Get the tcache. */
+	// 	tcache_t *tcache = tcache_get_from_ind(tsd, dopts.tcache_ind,
+	// 		sopts.slow, /* is_alloc */ true);
+	// 	/* Get the arena. */
+	// 	arena_t *arena;
+	// 	if (arena_get_from_ind(tsd, dopts.arena_ind, &arena)) {
+	// 		return NULL;
+	// 	}
+	// 	// iallocztm(tsd_tsdn(tsd), size, ind, dopts->zero, tcache, false,
+	// 	//     arena, sopts->slow);
+	// //iallocztm
+	// 	// bool slab = sz_can_use_slab(usize);
+	// 	// allocation = iallocztm_explicit_slab(tsd_tsdn(tsd), size, ind, dopts->zero, slab, tcache, false, arena, sopts->slow);
+	// 	tsdn_t *tsdn =tsd_tsdn(tsd);
+	// 	// bool slow_path = sopts.slow;
+	// 	// ret = arena_malloc(tsdn, arena, size, ind, dopts.zero, slab, tcache, slow_path );
+	// 	ret = arena_malloc(tsdn, arena, size, ind, dopts.zero, tcache, sopts.slow);
+	// 	bool is_internal = false;
+	// 	if (config_stats && is_internal && likely(ret != NULL)) {
+	// 		arena_internal_add(iaalloc(tsdn, ret), isalloc(tsdn, ret));
+	// 	}
+	// 	if (first_time == 2) {
+	// 		printf( "\033[1;31m Using arena_malloc!  \033[0m\n");
+	// 		first_time = 3;
+	// 	}
+	// 	return ret;
 	}else{
 		printf( "\033[1;31m Alignment and zero flags are not zero, they are %i and %i \033[0m\n",dopts.alignment, dopts.zero );
 		return fallback_alloc(size,flags);
@@ -3533,7 +3608,6 @@ JEMALLOC_ATTR(malloc) JEMALLOC_ALLOC_SIZE(1)
 je_mallocv(size_t size, int flags) {
 	static int first_time = 1;
     if (first_time) {
-        printf( "\033[1;31m Using Jemallocv Veeee!\033[0m\n");
         first_time = 0;
     }
 	LOG("core.mallocx.entry", "size: %zu, flags: %d", size, flags);
