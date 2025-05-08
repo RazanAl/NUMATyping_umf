@@ -203,7 +203,9 @@ void* thread_main(void* args){
 			}
 			//printf("old is  %p\n", old);
 			if(old!=0){umf_free(0,old);}
-			buffer[i%BUFFER_SZ] = umfFastJemallocMalloc(jemalloc_pool[0], 64);
+			void* p = umfFastJemallocMalloc(jemalloc_pool[0], 64);
+			(*(int*)p) = 5;
+			buffer[i%BUFFER_SZ] = p;
 			// buffer[i%BUFFER_SZ] = umf_alloc(0, 64, 64);	
 			//printf("old is going to be %p\n", buffer[i%BUFFER_SZ]);
 			if(i==0){
@@ -213,7 +215,10 @@ void* thread_main(void* args){
 		else{
 			void* old = buffer[i%BUFFER_SZ];
 			if(old!=0){free(old);}
-			buffer[i%BUFFER_SZ] = malloc(64);	
+			void* p = malloc(64);
+			(*(int*)p) = 5;
+			buffer[i%BUFFER_SZ] = p;
+			// buffer[i%BUFFER_SZ] = malloc(64);	
 		}
 	}
 	

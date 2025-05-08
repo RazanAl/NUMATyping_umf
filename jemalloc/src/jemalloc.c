@@ -3542,6 +3542,7 @@ imallocv_fastpath(size_t size, int flags, void *(fallback_alloc)(size_t,int)){
 		tsdn_t *tsdn =tsd_tsdn(tsd);
 	// 	// TcacheVsArena--;
 		ret = arena_malloc(tsdn, arena, size, ind, dopts.zero, tcache, sopts.slow);
+		// ret = arena_malloc_hard(tsdn, arena, size, ind, dopts.zero);
 		bool is_internal = false;
 		if (config_stats && is_internal && likely(ret != NULL)) {
 			arena_internal_add(iaalloc(tsdn, ret), isalloc(tsdn, ret));
