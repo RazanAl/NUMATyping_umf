@@ -1,6 +1,6 @@
 # NUMATyping_umf
 
-This repository contains experiments to improve or investigate the NUMA allocator from the [Unified Memory Framework (UMF)](https://github.com/oneapi-src/unified-memory-framework), comparing it to the default memory allocator `malloc()`. It uses `umf_test.cpp` from the [NumaTyping](https://github.com/RazanAl/NumaTyping](https://github.com/CU-NVM/NUMATyping) project, which allocates memory with multiple threads using either `malloc()` or a NUMA-aware allocator (primarily `mallocx()` or `mallocv()` from a modified version of [jemalloc](https://github.com/jemalloc/jemalloc/releases/tag/5.3.0).
+This repository contains experiments to improve or investigate the NUMA allocator from the [Unified Memory Framework (UMF)](https://github.com/oneapi-src/unified-memory-framework), comparing it to the default memory allocator `malloc()`. It uses `umf_test.cpp` from the [NumaTyping](https://github.com/CU-NVM/NUMATyping) project, which allocates memory with multiple threads using either `malloc()` or a NUMA-aware allocator (primarily `mallocx()` or `mallocv()` from a modified version of [jemalloc](https://github.com/jemalloc/jemalloc/releases/tag/5.3.0).
 
 ---
 
