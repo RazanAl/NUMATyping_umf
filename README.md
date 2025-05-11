@@ -84,7 +84,7 @@ The branches `main`, `updated_UMF`, and `mallocv` are drafts or backups of the a
    4. Ensure **all components are compiled with `-O3`** optimization.
 
 5. ⚠️ Some experimental results (`old_old_umf`, `Dynamic_UMF`, and `locks_UMF`) are omitted from the final performance graph below due to lack of significance. This includes the original `old_umf`, and the thread global `Dynamic_UMF` and `locks_UMF`.
-6. 
+   ![Performance Graph](images/performance_graph.png)
 
 ---
 
