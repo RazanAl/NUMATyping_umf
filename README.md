@@ -22,7 +22,7 @@ This repository contains experiments to improve or investigate the NUMA allocato
 
 5. **`locks_UMF`**  
    Like `Dynamic_UMF`, but replaces `pthread` locks with multi-reader locks from the [qd-locks library](https://github.com/kjellwinblad/qd_lock_lib). Requires compatibility changes to `qd`.
-   Note: changes were lost due to push errors, but are mainly using using system `stdatomic.h`, and re-writing a couple functions to resolve errors. 
+   Note: changes were lost due to push errors, but are mainly using the system `stdatomic.h`, and re-writing a couple functions to resolve errors. 
 
 7. **`local_thread`**  
    Uses thread-local tcaches, eliminating the need for locks.
